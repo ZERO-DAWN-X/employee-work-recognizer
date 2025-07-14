@@ -71,7 +71,7 @@ The following images illustrate the type of environment and monitoring this syst
 
 1. **Clone the repository:**
    ```sh
-   git clone <repo-url>
+   git clone https://github.com/ZERO-DAWN-X/employee-work-recognizer
    cd employee-work-recognizer
    ```
 2. **Install dependencies:**
