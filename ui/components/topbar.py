@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel, QGraphicsDropShadowEffe
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from ui.style import PADDING, TOPBAR_HEIGHT, ACCENT, TEXT_MAIN, TEXT_SUB, STATUS_ERROR
-from ui.components.modern_button.py import ModernButton
+from ui.components.modern_button import ModernButton
 import qtawesome as qta
 
 class CustomTopBar(QFrame):
