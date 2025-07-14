@@ -1,6 +1,6 @@
 # Employee Work Time Recognizer
 
-![Project Status](https://img.shields.io/badge/status-active-brightgreen)
+![Hero Image](public/hero.jpg)
 
 ---
 
@@ -37,9 +37,9 @@ Employee Work Time Recognizer leverages computer vision to automatically detect 
 
 ## User Interface
 
-![GUI Screenshot](ui/screenshot.png)
+![UI Dashboard](public/Office%20Surveillance-2.png)
 
-*Above: Minimal, modern interface with clear controls and a central webcam feed. Designed for clarity and ease of use.*
+*Above: Example of a modern, minimal office monitoring dashboard. The actual application features a clean interface with clear controls and a central webcam feed, designed for clarity and ease of use.*
 
 ---
 
