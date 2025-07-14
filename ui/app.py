@@ -50,7 +50,6 @@ class ModernButton(QPushButton):
                 border: none;
                 border-radius: {BTN_RADIUS}px;
                 margin-left: 4px;
-                transition: background 0.2s;
             }}
             QPushButton:hover {{
                 background: {BTN_BG_HOVER};
@@ -210,20 +209,19 @@ class CameraFeeds(CardFrame):
         self.video_label.setStyleSheet(f"background: #111; border-radius: 18px; border: 2px solid {ACCENT};")
         self.video_label.setMinimumSize(320, 200)
         video_grid.addWidget(self.video_label, 0, 0, 2, 2, alignment=Qt.AlignCenter)
-        # LIVE badge (pill, shadow, margin)
+        # LIVE badge (pill, clear text, no box-shadow/transition)
         self.live_badge = QLabel("LIVE")
         self.live_badge.setStyleSheet(f"""
             background: {ACCENT};
-            color: #181B20;
-            font-weight: 600;
-            font-size: 11px;
-            padding: 2px 16px;
-            border-radius: 12px;
-            margin-top: 16px;
-            margin-left: 16px;
-            box-shadow: 0 2px 8px rgba(61,225,201,0.18);
+            color: #fff;
+            font-weight: bold;
+            font-size: 13px;
+            padding: 4px 18px;
+            border-radius: 14px;
+            margin-top: 18px;
+            margin-left: 18px;
         """)
-        self.live_badge.setFixedWidth(48)
+        self.live_badge.setFixedWidth(60)
         self.live_badge.setAlignment(Qt.AlignCenter)
         video_grid.addWidget(self.live_badge, 0, 0, alignment=Qt.AlignTop | Qt.AlignLeft)
         # Add video container to main layout
