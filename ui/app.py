@@ -214,7 +214,7 @@ class CameraFeeds(CardFrame):
         video_grid.addWidget(self.video_border, 0, 0, 2, 2, alignment=Qt.AlignCenter)
         # Status badge (replaces LIVE badge)
         self.status_badge = QLabel("Status: -")
-        self.status_badge.setStyleSheet(f"background: {ACCENT}; color: #fff; font-weight: bold; font-size: 13px; padding: 4px 18px; border-radius: 14px; margin-top: 18px; margin-left: 18px;")
+        self.status_badge.setStyleSheet(f"background: #E74C3C; color: #fff; font-weight: bold; font-size: 13px; padding: 4px 18px; border-radius: 14px; margin-top: 18px; margin-left: 18px;")
         self.status_badge.setFixedWidth(110)
         self.status_badge.setAlignment(Qt.AlignCenter)
         video_grid.addWidget(self.status_badge, 0, 0, alignment=Qt.AlignTop | Qt.AlignLeft)
