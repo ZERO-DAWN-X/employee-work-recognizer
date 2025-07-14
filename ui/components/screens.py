@@ -31,6 +31,8 @@ class DashboardScreen(QWidget):
     def update_employee_statuses(self):
         faces = self.camera_feeds.get_latest_faces()
         self.employee_list.update_statuses(faces)
+        # Pass current statuses to camera feed for coloring
+        self.camera_feeds.set_employee_statuses(self.employee_list.get_status_list())
 
 class UsersScreen(QWidget):
     def __init__(self):

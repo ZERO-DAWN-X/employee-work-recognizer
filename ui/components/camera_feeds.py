@@ -1,12 +1,20 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel
 from PyQt5.QtCore import Qt, QTimer, QTime
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPainterPath
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPainterPath, QColor
 import qtawesome as qta
 import cv2
 import numpy as np
-from ui.style import PADDING, GAP, ACCENT, TEXT_MAIN, TEXT_SUB
+from collections import deque
+from ui.style import PADDING, GAP, ACCENT, TEXT_MAIN, TEXT_SUB, STATUS_SUCCESS, STATUS_INFO, STATUS_ERROR, STATUS_WARNING
 from ui.components.card import CardFrame
 from detection.face_detector import FaceDetector
+
+STATUS_COLORS = {
+    "WORKING": STATUS_SUCCESS,
+    "IDLE": STATUS_INFO,
+    "SLEEPING": STATUS_ERROR,
+    "WALKING": STATUS_WARNING,
+}
 
 class CameraFeeds(CardFrame):
     def __init__(self):
@@ -15,6 +23,8 @@ class CameraFeeds(CardFrame):
         self.timer = None
         self.detector = FaceDetector()
         self.last_faces = []
+        self.face_buffer = deque(maxlen=5)  # Smoothing buffer for faces
+        self.employee_statuses = None  # To be set externally
         layout = QVBoxLayout()
         layout.setContentsMargins(PADDING, PADDING, PADDING, PADDING)
         layout.setSpacing(GAP)
@@ -47,12 +57,7 @@ class CameraFeeds(CardFrame):
         # Video label
         self.video_label = QLabel()
         self.video_label.setAlignment(Qt.AlignCenter)
-        self.video_label.setStyleSheet(f"""
-            background: #000;
-            border-radius: 14px;
-            color: {TEXT_SUB};
-            font-size: 14px;
-        """)
+        self.video_label.setStyleSheet(f"background: #000; border-radius: 14px; color: {TEXT_SUB}; font-size: 14px;")
         self.video_label.setMinimumSize(460, 300)
         video_grid.addWidget(self.video_label, 0, 0, alignment=Qt.AlignCenter)
         layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
@@ -66,6 +71,9 @@ class CameraFeeds(CardFrame):
 
     def update_clock(self):
         self.clock_label.setText(QTime.currentTime().toString('hh:mm:ss'))
+
+    def set_employee_statuses(self, statuses):
+        self.employee_statuses = statuses
 
     def start_camera(self):
         self.cap = cv2.VideoCapture(0)
@@ -83,12 +91,23 @@ class CameraFeeds(CardFrame):
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 # Detect all faces
                 _, faces = self.detector.detect(frame_rgb)
-                self.last_faces = faces
-                # Draw rectangles for each face
+                self.face_buffer.append(faces)
+                # Smoothing: use the most common set of faces in the buffer
+                faces_smoothed = self._smooth_faces()
+                self.last_faces = faces_smoothed
+                # Draw rectangles for each face, colored by status if available
                 draw_frame = frame_rgb.copy()
-                for i, (x, y, w, h) in enumerate(faces):
-                    cv2.rectangle(draw_frame, (x, y), (x + w, y + h), (0, 212, 170), 2)
-                    cv2.putText(draw_frame, f"Person {i+1}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 212, 170), 2)
+                for i, (x, y, w, h) in enumerate(faces_smoothed):
+                    status = None
+                    color = (0, 212, 170)
+                    if self.employee_statuses and i < len(self.employee_statuses):
+                        status = self.employee_statuses[i]
+                        color_hex = STATUS_COLORS.get(status, STATUS_INFO)
+                        color = QColor(color_hex)
+                        color = (color.red(), color.green(), color.blue())
+                    cv2.rectangle(draw_frame, (x, y), (x + w, y + h), color, 2)
+                    label = status if status else f"Person {i+1}"
+                    cv2.putText(draw_frame, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
                 h, w, ch = draw_frame.shape
                 bytes_per_line = ch * w
                 qt_image = QImage(draw_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
@@ -110,6 +129,13 @@ class CameraFeeds(CardFrame):
                     Qt.KeepAspectRatio, Qt.SmoothTransformation))
             else:
                 self.video_label.setText("Stream error")
+
+    def _smooth_faces(self):
+        # Use the most common face set in the buffer, or the last one
+        if not self.face_buffer:
+            return []
+        # For simplicity, use the last faces (could be improved with tracking)
+        return self.face_buffer[-1]
 
     def get_latest_faces(self):
         return self.last_faces

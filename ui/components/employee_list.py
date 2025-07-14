@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QLabel, QPushButton, QFrame, QHBoxLayout, QSizePolicy, QScrollArea
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTime
 from ui.style import STATUS_SUCCESS, STATUS_INFO, STATUS_ERROR, STATUS_WARNING, TEXT_MAIN, TEXT_SUB
+import time
 
 # Demo employee data
 EMPLOYEES = [
@@ -16,12 +17,17 @@ STATUS_COLORS = {
     "WALKING": STATUS_WARNING,
 }
 
+ALL_STATUSES = ["WORKING", "IDLE", "SLEEPING", "WALKING"]
+
 class EmployeeStatusItem(QFrame):
     def __init__(self, employee):
         super().__init__()
         self.employee = employee
         self.status = "IDLE"
         self.expanded = False
+        self.status_times = {s: 0.0 for s in ALL_STATUSES}
+        self.last_status = self.status
+        self.last_update = time.time()
         self._build_ui()
 
     def _build_ui(self):
@@ -49,27 +55,47 @@ class EmployeeStatusItem(QFrame):
         details_layout = QVBoxLayout(self.details_frame)
         details_layout.setContentsMargins(0, 0, 0, 0)
         details_layout.setSpacing(4)
-        self.stats_label = QLabel("No analytics yet.")
+        self.stats_label = QLabel()
         self.stats_label.setStyleSheet(f"color: {TEXT_SUB}; font-size: 13px;")
         details_layout.addWidget(self.stats_label)
         layout.addWidget(self.details_frame)
         self.setLayout(layout)
         self.setFrameShape(QFrame.StyledPanel)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.update_stats_label()
 
     def _status_style(self, status):
         color = STATUS_COLORS.get(status, STATUS_INFO)
         return f"background: {color}; color: white; font-weight: 600; padding: 2px 12px; border-radius: 10px;"
 
     def set_status(self, status):
+        now = time.time()
+        # Increment time for previous status
+        if self.last_status in self.status_times:
+            self.status_times[self.last_status] += now - self.last_update
+        self.last_update = now
+        self.last_status = status
         self.status = status
         self.status_badge.setText(status)
         self.status_badge.setStyleSheet(self._status_style(status))
+        self.update_stats_label()
+
+    def update_stats_label(self):
+        # Show time spent in each status
+        lines = []
+        for s in ALL_STATUSES:
+            t = self.status_times[s]
+            if s == self.status:
+                # Add current ongoing time
+                t += time.time() - self.last_update
+            lines.append(f"{s.title()}: {int(t)}s")
+        self.stats_label.setText("  |  ".join(lines))
 
     def toggle_expand(self):
         self.expanded = not self.expanded
         self.details_frame.setVisible(self.expanded)
         self.expand_btn.setText("Details ▲" if self.expanded else "Details ▼")
+        self.update_stats_label()
 
 class EmployeeList(QWidget):
     def __init__(self, employees=EMPLOYEES):
@@ -101,4 +127,7 @@ class EmployeeList(QWidget):
             if i < len(detected_faces):
                 item.set_status("WORKING")
             else:
-                item.set_status("IDLE") 
+                item.set_status("IDLE")
+
+    def get_status_list(self):
+        return [item.status for item in self.items] 
