@@ -193,7 +193,7 @@ class CameraFeeds(CardFrame):
         title = QLabel("LIVE CAMERA FEEDS")
         title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 14px; font-weight: bold;")
         layout.addWidget(title)
-        # Video feed container
+        # Video feed container with grid layout for overlay
         self.video_container = QFrame()
         self.video_container.setStyleSheet(f"""
             background: #181B20;
@@ -202,25 +202,21 @@ class CameraFeeds(CardFrame):
             box-shadow: 0 4px 24px rgba(61,225,201,0.10);
         """)
         self.video_container.setMinimumSize(340, 220)
-        video_layout = QVBoxLayout(self.video_container)
-        video_layout.setContentsMargins(0, 0, 0, 0)
-        video_layout.setSpacing(0)
+        video_grid = QGridLayout(self.video_container)
+        video_grid.setContentsMargins(0, 0, 0, 0)
+        video_grid.setSpacing(0)
         # Video label
         self.video_label = QLabel()
         self.video_label.setAlignment(Qt.AlignCenter)
         self.video_label.setStyleSheet(f"background: #111; border-radius: 14px;")
         self.video_label.setMinimumSize(320, 200)
-        video_layout.addWidget(self.video_label, alignment=Qt.AlignCenter)
+        video_grid.addWidget(self.video_label, 0, 0, 2, 2, alignment=Qt.AlignCenter)
         # LIVE badge
         self.live_badge = QLabel("LIVE")
         self.live_badge.setStyleSheet(f"background: {ACCENT}; color: #181B20; font-weight: bold; font-size: 12px; padding: 2px 12px; border-radius: 8px; margin: 10px;")
         self.live_badge.setFixedWidth(48)
         self.live_badge.setAlignment(Qt.AlignCenter)
-        # Overlay badge using absolute positioning
-        self.video_container_layout = QVBoxLayout(self.video_container)
-        self.video_container_layout.setContentsMargins(0, 0, 0, 0)
-        self.video_container_layout.addWidget(self.live_badge, alignment=Qt.AlignTop | Qt.AlignLeft)
-        self.video_container_layout.addStretch()
+        video_grid.addWidget(self.live_badge, 0, 0, alignment=Qt.AlignTop | Qt.AlignLeft)
         # Add video container to main layout
         layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
         self.setLayout(layout)
