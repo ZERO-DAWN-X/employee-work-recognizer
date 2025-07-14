@@ -4,12 +4,7 @@ from PyQt5.QtGui import QColor, QPainter, QPixmap
 import qtawesome as qta
 from ui.style import STATUS_SUCCESS, STATUS_INFO, STATUS_WARNING, ACCENT, TEXT_MAIN, TEXT_SUB
 
-STATUS_MAP = {
-    'WORK':    {'color': STATUS_SUCCESS, 'icon': qta.icon('fa5s.user-tie', color=STATUS_SUCCESS), 'label': 'WORK'},
-    'IDLE':    {'color': STATUS_INFO,    'icon': qta.icon('fa5s.coffee', color=STATUS_INFO), 'label': 'IDLE'},
-    'SLEEPING':{'color': STATUS_WARNING, 'icon': qta.icon('fa5s.bed', color=STATUS_WARNING), 'label': 'SLEEPING'},
-    'WALKING': {'color': ACCENT,         'icon': qta.icon('fa5s.walking', color=ACCENT), 'label': 'WALKING'},
-}
+STATUS_KEYS = ['WORK', 'IDLE', 'SLEEPING', 'WALKING']
 
 class StatusCard(QFrame):
     def __init__(self, parent=None):
@@ -26,6 +21,13 @@ class StatusCard(QFrame):
             }}
         ''')
         self.status = 'IDLE'
+        # Build status map with icons after QApplication is running
+        self.STATUS_MAP = {
+            'WORK':    {'color': STATUS_SUCCESS, 'icon': qta.icon('fa5s.user', color=STATUS_SUCCESS), 'label': 'WORK'},
+            'IDLE':    {'color': STATUS_INFO,    'icon': qta.icon('fa5s.coffee', color=STATUS_INFO), 'label': 'IDLE'},
+            'SLEEPING':{'color': STATUS_WARNING, 'icon': qta.icon('fa5s.bed', color=STATUS_WARNING), 'label': 'SLEEPING'},
+            'WALKING': {'color': ACCENT,         'icon': qta.icon('fa5s.walking', color=ACCENT), 'label': 'WALKING'},
+        }
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
@@ -51,7 +53,8 @@ class StatusCard(QFrame):
         legend = QHBoxLayout()
         legend.setSpacing(10)
         self.legend_labels = {}
-        for key, info in STATUS_MAP.items():
+        for key in STATUS_KEYS:
+            info = self.STATUS_MAP[key]
             lbl = QLabel()
             lbl.setFixedSize(22, 22)
             lbl.setAlignment(Qt.AlignCenter)
@@ -67,16 +70,16 @@ class StatusCard(QFrame):
         self._timer.timeout.connect(self._animate)
         self._timer.start(40)
     def set_status(self, status):
-        if status not in STATUS_MAP:
+        if status not in self.STATUS_MAP:
             status = 'IDLE'
         self.status = status
-        info = STATUS_MAP[status]
+        info = self.STATUS_MAP[status]
         self.icon_label.setPixmap(info['icon'].pixmap(44, 44))
         self.text_label.setText(info['label'])
         # Highlight legend
         for key, lbl in self.legend_labels.items():
             if key == status:
-                lbl.setStyleSheet(f"border-bottom: 2px solid {STATUS_MAP[key]['color']}; background: rgba(0,0,0,0.12);")
+                lbl.setStyleSheet(f"border-bottom: 2px solid {self.STATUS_MAP[key]['color']}; background: rgba(0,0,0,0.12);")
             else:
                 lbl.setStyleSheet(f"opacity: 0.5;")
         self.update_indicator()
@@ -90,7 +93,7 @@ class StatusCard(QFrame):
             self._pulse_dir = 1
         self.update_indicator()
     def update_indicator(self):
-        color = QColor(STATUS_MAP[self.status]['color'])
+        color = QColor(self.STATUS_MAP[self.status]['color'])
         pix = QPixmap(18, 18)
         pix.fill(Qt.transparent)
         painter = QPainter(pix)
