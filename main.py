@@ -1,5 +1,5 @@
 from ui.app import run_app
-
+ 
 if __name__ == "__main__":
     print("Starting Employee Work Time Recognizer (GUI)...")
     run_app()
