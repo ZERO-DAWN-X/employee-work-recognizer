@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QSizePolicy, QGridLayout, QPushButton, QStackedWidget
 )
 from PyQt5.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
-from PyQt5.QtGui import QFont, QIcon, QColor, QPalette, QImage, QPixmap
+from PyQt5.QtGui import QFont, QIcon, QColor, QPalette, QImage, QPixmap, QPainter, QPainterPath
 import qtawesome as qta
 import cv2
 
@@ -193,12 +193,36 @@ class CameraFeeds(CardFrame):
         title = QLabel("LIVE CAMERA FEEDS")
         title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 14px; font-weight: bold;")
         layout.addWidget(title)
+        # Video feed container
+        self.video_container = QFrame()
+        self.video_container.setStyleSheet(f"""
+            background: #181B20;
+            border-radius: 18px;
+            border: 2px solid {ACCENT};
+            box-shadow: 0 4px 24px rgba(61,225,201,0.10);
+        """)
+        self.video_container.setMinimumSize(340, 220)
+        video_layout = QVBoxLayout(self.video_container)
+        video_layout.setContentsMargins(0, 0, 0, 0)
+        video_layout.setSpacing(0)
+        # Video label
         self.video_label = QLabel()
         self.video_label.setAlignment(Qt.AlignCenter)
-        self.video_label.setStyleSheet(f"background: #111; border-radius: 16px;")
-        self.video_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.video_label.setMinimumHeight(240)
-        layout.addWidget(self.video_label, stretch=1)
+        self.video_label.setStyleSheet(f"background: #111; border-radius: 14px;")
+        self.video_label.setMinimumSize(320, 200)
+        video_layout.addWidget(self.video_label, alignment=Qt.AlignCenter)
+        # LIVE badge
+        self.live_badge = QLabel("LIVE")
+        self.live_badge.setStyleSheet(f"background: {ACCENT}; color: #181B20; font-weight: bold; font-size: 12px; padding: 2px 12px; border-radius: 8px; margin: 10px;")
+        self.live_badge.setFixedWidth(48)
+        self.live_badge.setAlignment(Qt.AlignCenter)
+        # Overlay badge using absolute positioning
+        self.video_container_layout = QVBoxLayout(self.video_container)
+        self.video_container_layout.setContentsMargins(0, 0, 0, 0)
+        self.video_container_layout.addWidget(self.live_badge, alignment=Qt.AlignTop | Qt.AlignLeft)
+        self.video_container_layout.addStretch()
+        # Add video container to main layout
+        layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
         self.setLayout(layout)
         self.start_camera()
     def start_camera(self):
@@ -213,19 +237,23 @@ class CameraFeeds(CardFrame):
         if self.cap:
             ret, frame = self.cap.read()
             if ret:
-                # No mirroring (no cv2.flip)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 h, w, ch = frame.shape
-                # Calculate 16:9 size based on label width
-                label_w = self.video_label.width()
-                label_h = int(label_w * 9 / 16)
-                if label_h > self.video_label.height():
-                    label_h = self.video_label.height()
-                    label_w = int(label_h * 16 / 9)
-                frame = cv2.resize(frame, (label_w, label_h), interpolation=cv2.INTER_AREA)
-                qt_image = QImage(frame.data, label_w, label_h, ch * label_w, QImage.Format_RGB888)
+                bytes_per_line = ch * w
+                qt_image = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
                 pixmap = QPixmap.fromImage(qt_image)
-                self.video_label.setPixmap(pixmap)
+                # Rounded corners mask
+                rounded = QPixmap(pixmap.size())
+                rounded.fill(Qt.transparent)
+                painter = QPainter(rounded)
+                painter.setRenderHint(QPainter.Antialiasing)
+                path = QPainterPath()
+                path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), 14, 14)
+                painter.setClipPath(path)
+                painter.drawPixmap(0, 0, pixmap)
+                painter.end()
+                self.video_label.setPixmap(rounded.scaled(
+                    self.video_label.width(), self.video_label.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
             else:
                 self.video_label.setText("Error: Failed to capture frame.")
     def stop_camera(self):
