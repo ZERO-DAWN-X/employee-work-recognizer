@@ -184,24 +184,27 @@ class CameraFeeds(CardFrame):
                 draw_frame = frame_rgb.copy()
                 for (x, y, w, h) in faces:
                     cv2.rectangle(draw_frame, (x, y), (x + w, y + h), (0, 212, 170), 2)
+                # --- FIXED: Proper scaling and rounded mask ---
+                label_w = max(1, self.video_label.width())
+                label_h = max(1, self.video_label.height())
+                # Scale frame to label size (keep aspect)
                 h, w, ch = draw_frame.shape
                 bytes_per_line = ch * w
                 qt_image = QImage(draw_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
-                pixmap = QPixmap.fromImage(qt_image)
-                radius = 14
+                scaled_qt_image = qt_image.scaled(label_w, label_h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                pixmap = QPixmap.fromImage(scaled_qt_image)
+                # Apply rounded corners
                 rounded = QPixmap(pixmap.size())
                 rounded.fill(Qt.transparent)
                 painter = QPainter(rounded)
                 painter.setRenderHint(QPainter.Antialiasing, True)
                 painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
                 path = QPainterPath()
-                path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), radius, radius)
+                path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), 14, 14)
                 painter.setClipPath(path)
-                # Fill the label area
-                scaled = rounded.scaled(self.video_label.width(), self.video_label.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                painter.drawPixmap(0, 0, scaled)
+                painter.drawPixmap(0, 0, pixmap)
                 painter.end()
-                self.video_label.setPixmap(scaled)
+                self.video_label.setPixmap(rounded)
                 self.stats_label.setText(f"Work: {int(self.work_time)}s   |   Idle: {int(self.idle_time)}s")
             else:
                 self.video_label.setText("Stream error")
