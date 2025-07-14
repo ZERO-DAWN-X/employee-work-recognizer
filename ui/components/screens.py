@@ -14,12 +14,7 @@ class DashboardScreen(QWidget):
         layout.setSpacing(0)
         grid = QGridLayout()
         grid.setSpacing(GAP)
-        # Set column stretch: camera feed (cols 0-1) gets 3, right-side (col 2) gets 1
-        grid.setColumnStretch(0, 3)
-        grid.setColumnStretch(1, 3)
-        grid.setColumnStretch(2, 1)
         self.cameras = CameraFeeds()
-        self.cameras.setMinimumWidth(600)  # Make camera card more prominent
         grid.addWidget(self.cameras, 0, 0, 2, 2)
         self.activity = ActivityDetection()
         grid.addWidget(self.activity, 0, 2, 1, 1)

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel, QSizePolicy
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel
 from PyQt5.QtCore import Qt, QTimer, QTime
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPainterPath
 import qtawesome as qta
@@ -54,7 +54,7 @@ class CameraFeeds(CardFrame):
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         """)
-        self.video_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_container.setMinimumSize(360, 240)
         video_grid = QGridLayout(self.video_container)
         video_grid.setContentsMargins(0, 0, 0, 0)
         video_grid.setSpacing(0)
@@ -64,7 +64,7 @@ class CameraFeeds(CardFrame):
             border: 2px solid {ACCENT};
             border-radius: 16px;
         """)
-        self.video_border.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_border.setMinimumSize(340, 220)
         border_layout = QVBoxLayout(self.video_border)
         border_layout.setContentsMargins(0, 0, 0, 0)
         border_layout.setSpacing(0)
@@ -76,11 +76,10 @@ class CameraFeeds(CardFrame):
             color: {TEXT_SUB};
             font-size: 14px;
         """)
-        self.video_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_label.setMinimumSize(336, 216)
         border_layout.addWidget(self.video_label)
-        self.video_border.setLayout(border_layout)
-        video_grid.addWidget(self.video_border, 0, 0, 2, 2)
-        layout.addWidget(self.video_container, stretch=1)
+        video_grid.addWidget(self.video_border, 0, 0, 2, 2, alignment=Qt.AlignCenter)
+        layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
         # Status row (badges)
         self.status_row = QHBoxLayout()
         self.status_row.setSpacing(12)
@@ -127,11 +126,13 @@ class CameraFeeds(CardFrame):
         else:
             return f"background: transparent; color: #444; font-weight: 500; border-radius: 14px; padding: 4px 16px; border: 1.5px solid #333; opacity: 0.5;"
     def update_status_row(self, status):
+        # Remove old widgets
         while self.status_row.count():
             item = self.status_row.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
+        # Add new badges
         for key, cfg in STATUS_CONFIG.items():
             active = (key == status)
             badge = self._make_status_badge(cfg['icon'], cfg['label'], cfg['color'], active, key)
@@ -184,27 +185,24 @@ class CameraFeeds(CardFrame):
                 draw_frame = frame_rgb.copy()
                 for (x, y, w, h) in faces:
                     cv2.rectangle(draw_frame, (x, y), (x + w, y + h), (0, 212, 170), 2)
-                # --- FIXED: Proper scaling and rounded mask ---
-                label_w = max(1, self.video_label.width())
-                label_h = max(1, self.video_label.height())
-                # Scale frame to label size (keep aspect)
                 h, w, ch = draw_frame.shape
                 bytes_per_line = ch * w
                 qt_image = QImage(draw_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
-                scaled_qt_image = qt_image.scaled(label_w, label_h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                pixmap = QPixmap.fromImage(scaled_qt_image)
-                # Apply rounded corners
+                pixmap = QPixmap.fromImage(qt_image)
+                radius = 14
                 rounded = QPixmap(pixmap.size())
                 rounded.fill(Qt.transparent)
                 painter = QPainter(rounded)
                 painter.setRenderHint(QPainter.Antialiasing, True)
                 painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
                 path = QPainterPath()
-                path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), 14, 14)
+                path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), radius, radius)
                 painter.setClipPath(path)
                 painter.drawPixmap(0, 0, pixmap)
                 painter.end()
-                self.video_label.setPixmap(rounded)
+                self.video_label.setPixmap(rounded.scaled(
+                    self.video_label.width(), self.video_label.height(), 
+                    Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 self.stats_label.setText(f"Work: {int(self.work_time)}s   |   Idle: {int(self.idle_time)}s")
             else:
                 self.video_label.setText("Stream error")
