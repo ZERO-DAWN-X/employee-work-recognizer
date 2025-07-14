@@ -1,42 +1,36 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QLabel
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy, QLabel
+from PyQt5.QtCore import Qt, QTimer
 from ui.style import GAP, ACCENT, TEXT_MAIN, TEXT_SUB
-from ui.components.employee_card import EmployeeCard
+from ui.components.camera_feeds import CameraFeeds
 from ui.components.activity import ActivityDetection
 from ui.components.analytics import AnalyticsCard
 from ui.components.timeline import TimelineCard
+from ui.components.employee_list import EmployeeList
 
 class DashboardScreen(QWidget):
     def __init__(self):
         super().__init__()
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        grid = QGridLayout()
-        grid.setSpacing(GAP)
-        # Left: Employee cards (vertical)
-        self.employee_cards = []
-        employees = [
-            {"name": "Alice Smith", "status": "WORK"},
-            {"name": "Bob Lee", "status": "IDLE"},
-        ]
-        left_col = QVBoxLayout()
-        left_col.setSpacing(GAP)
-        for emp in employees:
-            card = EmployeeCard(employee_name=emp["name"], current_status=emp["status"])
-            self.employee_cards.append(card)
-            left_col.addWidget(card)
-        left_col.addStretch()
-        grid.addLayout(left_col, 0, 0, 2, 1)
-        # Right: Activity, Analytics
-        self.activity = ActivityDetection()
-        grid.addWidget(self.activity, 0, 1, 1, 1)
-        self.analytics = AnalyticsCard()
-        grid.addWidget(self.analytics, 1, 1, 1, 1)
-        # Bottom: Timeline
-        self.timeline = TimelineCard()
-        grid.addWidget(self.timeline, 2, 0, 1, 2)
-        layout.addLayout(grid)
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(GAP, GAP, GAP, GAP)
+        main_layout.setSpacing(GAP)
+        # Left: Camera feed
+        self.camera_feeds = CameraFeeds()
+        main_layout.addWidget(self.camera_feeds, stretch=2)
+        # Right: Employee status panel
+        right_panel = QVBoxLayout()
+        right_panel.setSpacing(GAP)
+        self.employee_list = EmployeeList()
+        right_panel.addWidget(self.employee_list)
+        right_panel.addStretch()
+        main_layout.addLayout(right_panel, stretch=1)
+        # Timer to update employee statuses from camera
+        self.status_timer = QTimer(self)
+        self.status_timer.timeout.connect(self.update_employee_statuses)
+        self.status_timer.start(500)
+
+    def update_employee_statuses(self):
+        faces = self.camera_feeds.get_latest_faces()
+        self.employee_list.update_statuses(faces)
 
 class UsersScreen(QWidget):
     def __init__(self):
