@@ -1,9 +1,9 @@
 import sys
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QSizePolicy, QGridLayout
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QSizePolicy, QGridLayout, QPushButton
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtGui import QFont, QIcon
 import qtawesome as qta
 
 # --- Color Palette (from reference image) ---
@@ -23,6 +23,7 @@ PADDING = 24
 CARD_RADIUS = 18
 GAP = 24
 ICON_SIZE = 28
+TOPBAR_HEIGHT = 48
 
 class Sidebar(QFrame):
     def __init__(self):
@@ -47,21 +48,64 @@ class Sidebar(QFrame):
         layout.addStretch()
         self.setLayout(layout)
 
-class TopBar(QFrame):
-    def __init__(self):
-        super().__init__()
-        self.setFixedHeight(56)
+class CustomTopBar(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(TOPBAR_HEIGHT)
         self.setStyleSheet(f"background: {BG_MAIN}; border: none;")
         layout = QHBoxLayout()
         layout.setContentsMargins(PADDING, 0, PADDING, 0)
-        title = QLabel("AI-POWERED EMPLOYEE MONITORING")
-        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 17px; font-weight: bold; letter-spacing: 1px;")
-        company = QLabel("ZERO-DAWN-X")
-        company.setStyleSheet(f"color: {ACCENT}; font-size: 15px; font-weight: bold;")
-        layout.addWidget(title)
+        layout.setSpacing(0)
+        self.title = QLabel("AI-POWERED EMPLOYEE MONITORING")
+        self.title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 17px; font-weight: bold; letter-spacing: 1px;")
+        self.company = QLabel("ZERO-DAWN-X")
+        self.company.setStyleSheet(f"color: {ACCENT}; font-size: 15px; font-weight: bold;")
+        layout.addWidget(self.title)
         layout.addStretch()
-        layout.addWidget(company)
+        layout.addWidget(self.company)
+        # Window controls
+        self.min_btn = QPushButton()
+        self.max_btn = QPushButton()
+        self.close_btn = QPushButton()
+        for btn, icon, tooltip in [
+            (self.min_btn, qta.icon('fa5s.window-minimize', color=TEXT_SUB), 'Minimize'),
+            (self.max_btn, qta.icon('fa5s.square', color=TEXT_SUB), 'Maximize/Restore'),
+            (self.close_btn, qta.icon('fa5s.times', color='#F55'), 'Close')
+        ]:
+            btn.setIcon(icon)
+            btn.setFixedSize(32, 32)
+            btn.setStyleSheet(f"background: transparent; border: none; margin-left: 4px;")
+            btn.setToolTip(tooltip)
+            layout.addWidget(btn)
         self.setLayout(layout)
+        # Connect signals
+        self.min_btn.clicked.connect(self._minimize)
+        self.max_btn.clicked.connect(self._maximize_restore)
+        self.close_btn.clicked.connect(self._close)
+        self._parent = parent
+        self._drag_pos = None
+    def _minimize(self):
+        if self._parent:
+            self._parent.showMinimized()
+    def _maximize_restore(self):
+        if self._parent:
+            if self._parent.isMaximized():
+                self._parent.showNormal()
+            else:
+                self._parent.showMaximized()
+    def _close(self):
+        if self._parent:
+            self._parent.close()
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._drag_pos = event.globalPos() - self._parent.frameGeometry().topLeft()
+            event.accept()
+    def mouseMoveEvent(self, event):
+        if self._drag_pos and event.buttons() == Qt.LeftButton:
+            self._parent.move(event.globalPos() - self._drag_pos)
+            event.accept()
+    def mouseReleaseEvent(self, event):
+        self._drag_pos = None
 
 class CardFrame(QFrame):
     def __init__(self):
@@ -149,8 +193,7 @@ class Dashboard(QWidget):
         main_layout.addWidget(self.sidebar)
         content = QVBoxLayout()
         content.setSpacing(GAP)
-        self.topbar = TopBar()
-        content.addWidget(self.topbar)
+        self.topbar = None  # Will be set by MainWindow
         grid = QGridLayout()
         grid.setSpacing(GAP)
         self.cameras = CameraFeeds()
@@ -169,7 +212,14 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Employee Work Time Recognizer")
         self.setMinimumSize(1100, 750)
-        self.setCentralWidget(Dashboard())
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.central = Dashboard()
+        self.setCentralWidget(self.central)
+        # Add custom top bar
+        self.topbar = CustomTopBar(self)
+        self.central.topbar = self.topbar
+        layout = self.central.layout() or self.central.children()[0]
+        layout.insertWidget(0, self.topbar)
         self.setStyleSheet(f"background: {BG_MAIN};")
 
 def run_app():
