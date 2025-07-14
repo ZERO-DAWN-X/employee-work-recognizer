@@ -1,4 +1,4 @@
-# Employee Work Time Recognizer
+# Employee Work Analyzer
 
 ![Hero Image](public/hero.jpg)
 
