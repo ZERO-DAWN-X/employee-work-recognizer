@@ -6,25 +6,32 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 import qtawesome as qta
 
-DARK_BG = "#181C20"
-SIDEBAR_BG = "#20242A"
-CARD_BG = "#23272E"
-ACCENT = "#3DE1C9"
-TEXT_MAIN = "#F5F6FA"
-TEXT_SUB = "#A0A4AB"
-SHADOW = "0px 4px 24px rgba(0,0,0,0.18)"
-BAR_WORK = "#3DE1C9"
-BAR_IDLE = "#4A90E2"
-BAR_EAT = "#F5A623"
-BAR_SLEEP = "#9B59B6"
+# --- Color Palette (from reference image) ---
+BG_MAIN = "#181B20"         # Main background
+BG_SIDEBAR = "#20242A"     # Sidebar background
+BG_CARD = "#23262B"        # Card background
+ACCENT = "#3DE1C9"         # Accent (teal)
+TEXT_MAIN = "#F5F6FA"      # Main text (almost white)
+TEXT_SUB = "#A0A4AB"       # Subtle text (gray)
+BAR_WORK = "#3DE1C9"       # Bar - working
+BAR_IDLE = "#4A90E2"       # Bar - idle
+BAR_EAT = "#F5A623"        # Bar - eating
+BAR_SLEEP = "#9B59B6"      # Bar - sleeping
+
+# --- Spacing & Sizing ---
+PADDING = 24
+CARD_RADIUS = 18
+GAP = 24
 ICON_SIZE = 28
 
 class Sidebar(QFrame):
     def __init__(self):
         super().__init__()
-        self.setFixedWidth(60)
-        self.setStyleSheet(f"background: {SIDEBAR_BG}; border: none; border-radius: 16px; box-shadow: {SHADOW};")
+        self.setFixedWidth(64)
+        self.setStyleSheet(f"background: {BG_SIDEBAR}; border: none; border-radius: {CARD_RADIUS}px;")
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, PADDING, 0, PADDING)
+        layout.setSpacing(GAP)
         layout.setAlignment(Qt.AlignTop)
         icons = [
             qta.icon('fa5s.tachometer-alt', color=TEXT_MAIN),  # Dashboard
@@ -37,20 +44,20 @@ class Sidebar(QFrame):
             icon_label.setPixmap(icon.pixmap(ICON_SIZE, ICON_SIZE))
             icon_label.setAlignment(Qt.AlignCenter)
             layout.addWidget(icon_label, alignment=Qt.AlignHCenter)
-            layout.addSpacing(8)
         layout.addStretch()
         self.setLayout(layout)
 
 class TopBar(QFrame):
     def __init__(self):
         super().__init__()
-        self.setFixedHeight(48)
-        self.setStyleSheet(f"background: {DARK_BG}; border: none;")
+        self.setFixedHeight(56)
+        self.setStyleSheet(f"background: {BG_MAIN}; border: none;")
         layout = QHBoxLayout()
+        layout.setContentsMargins(PADDING, 0, PADDING, 0)
         title = QLabel("AI-POWERED EMPLOYEE MONITORING")
-        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 16px; font-weight: bold; letter-spacing: 1px;")
+        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 17px; font-weight: bold; letter-spacing: 1px;")
         company = QLabel("ZERO-DAWN-X")
-        company.setStyleSheet(f"color: {ACCENT}; font-size: 14px; font-weight: bold;")
+        company.setStyleSheet(f"color: {ACCENT}; font-size: 15px; font-weight: bold;")
         layout.addWidget(title)
         layout.addStretch()
         layout.addWidget(company)
@@ -59,17 +66,21 @@ class TopBar(QFrame):
 class CardFrame(QFrame):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet(f"background: {CARD_BG}; border-radius: 16px; box-shadow: {SHADOW};")
+        self.setStyleSheet(f"background: {BG_CARD}; border-radius: {CARD_RADIUS}px;")
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setContentsMargins(0, 0, 0, 0)
 
 class CameraFeeds(CardFrame):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
+        layout.setContentsMargins(PADDING, PADDING, PADDING, PADDING)
+        layout.setSpacing(GAP)
         title = QLabel("LIVE CAMERA FEEDS")
-        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 13px; font-weight: bold;")
+        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 14px; font-weight: bold;")
         layout.addWidget(title)
         empty = QLabel("No data available")
-        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 14px;")
+        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 15px;")
         empty.setAlignment(Qt.AlignCenter)
         layout.addStretch()
         layout.addWidget(empty)
@@ -80,11 +91,13 @@ class ActivityDetection(CardFrame):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
+        layout.setContentsMargins(PADDING, PADDING, PADDING, PADDING)
+        layout.setSpacing(GAP)
         title = QLabel("ACTIVITY DETECTION")
-        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 13px; font-weight: bold;")
+        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 14px; font-weight: bold;")
         layout.addWidget(title)
         empty = QLabel("No data available")
-        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 14px;")
+        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 15px;")
         empty.setAlignment(Qt.AlignCenter)
         layout.addStretch()
         layout.addWidget(empty)
@@ -95,11 +108,13 @@ class AnalyticsCard(CardFrame):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
+        layout.setContentsMargins(PADDING, PADDING, PADDING, PADDING)
+        layout.setSpacing(GAP)
         title = QLabel("REAL-TIME ANALYTICS")
-        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 13px; font-weight: bold;")
+        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 14px; font-weight: bold;")
         layout.addWidget(title)
         empty = QLabel("Coming soon")
-        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 14px;")
+        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 15px;")
         empty.setAlignment(Qt.AlignCenter)
         layout.addStretch()
         layout.addWidget(empty)
@@ -110,11 +125,13 @@ class TimelineCard(CardFrame):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
+        layout.setContentsMargins(PADDING, PADDING, PADDING, PADDING)
+        layout.setSpacing(GAP)
         title = QLabel("TIMELINE")
-        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 13px; font-weight: bold;")
+        title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 14px; font-weight: bold;")
         layout.addWidget(title)
         empty = QLabel("Coming soon")
-        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 14px;")
+        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 15px;")
         empty.setAlignment(Qt.AlignCenter)
         layout.addStretch()
         layout.addWidget(empty)
@@ -124,15 +141,18 @@ class TimelineCard(CardFrame):
 class Dashboard(QWidget):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet(f"background: {DARK_BG}; font-family: 'Segoe UI', Arial, sans-serif;")
+        self.setStyleSheet(f"background: {BG_MAIN}; font-family: 'Segoe UI', Arial, sans-serif;")
         main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(GAP, GAP, GAP, GAP)
+        main_layout.setSpacing(GAP)
         self.sidebar = Sidebar()
         main_layout.addWidget(self.sidebar)
         content = QVBoxLayout()
+        content.setSpacing(GAP)
         self.topbar = TopBar()
         content.addWidget(self.topbar)
         grid = QGridLayout()
-        grid.setSpacing(20)
+        grid.setSpacing(GAP)
         self.cameras = CameraFeeds()
         grid.addWidget(self.cameras, 0, 0, 2, 2)
         self.activity = ActivityDetection()
@@ -148,9 +168,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Employee Work Time Recognizer")
-        self.setMinimumSize(1000, 700)
+        self.setMinimumSize(1100, 750)
         self.setCentralWidget(Dashboard())
-        self.setStyleSheet(f"background: {DARK_BG};")
+        self.setStyleSheet(f"background: {BG_MAIN};")
 
 def run_app():
     app = QApplication(sys.argv)
