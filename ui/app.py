@@ -198,22 +198,31 @@ class CameraFeeds(CardFrame):
         self.video_container.setStyleSheet(f"""
             background: #181B20;
             border-radius: 18px;
-            border: 2px solid {ACCENT};
-            box-shadow: 0 4px 24px rgba(61,225,201,0.10);
+            border: none;
         """)
         self.video_container.setMinimumSize(340, 220)
         video_grid = QGridLayout(self.video_container)
         video_grid.setContentsMargins(0, 0, 0, 0)
         video_grid.setSpacing(0)
-        # Video label
+        # Video label with border and rounded corners
         self.video_label = QLabel()
         self.video_label.setAlignment(Qt.AlignCenter)
-        self.video_label.setStyleSheet(f"background: #111; border-radius: 14px;")
+        self.video_label.setStyleSheet(f"background: #111; border-radius: 18px; border: 2px solid {ACCENT};")
         self.video_label.setMinimumSize(320, 200)
         video_grid.addWidget(self.video_label, 0, 0, 2, 2, alignment=Qt.AlignCenter)
-        # LIVE badge
+        # LIVE badge (pill, shadow, margin)
         self.live_badge = QLabel("LIVE")
-        self.live_badge.setStyleSheet(f"background: {ACCENT}; color: #181B20; font-weight: bold; font-size: 12px; padding: 2px 12px; border-radius: 8px; margin: 10px;")
+        self.live_badge.setStyleSheet(f"""
+            background: {ACCENT};
+            color: #181B20;
+            font-weight: 600;
+            font-size: 11px;
+            padding: 2px 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            margin-left: 16px;
+            box-shadow: 0 2px 8px rgba(61,225,201,0.18);
+        """)
         self.live_badge.setFixedWidth(48)
         self.live_badge.setAlignment(Qt.AlignCenter)
         video_grid.addWidget(self.live_badge, 0, 0, alignment=Qt.AlignTop | Qt.AlignLeft)
@@ -238,13 +247,14 @@ class CameraFeeds(CardFrame):
                 bytes_per_line = ch * w
                 qt_image = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
                 pixmap = QPixmap.fromImage(qt_image)
-                # Rounded corners mask
+                # Rounded corners mask (match border radius)
+                radius = 18
                 rounded = QPixmap(pixmap.size())
                 rounded.fill(Qt.transparent)
                 painter = QPainter(rounded)
                 painter.setRenderHint(QPainter.Antialiasing)
                 path = QPainterPath()
-                path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), 14, 14)
+                path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), radius, radius)
                 painter.setClipPath(path)
                 painter.drawPixmap(0, 0, pixmap)
                 painter.end()
