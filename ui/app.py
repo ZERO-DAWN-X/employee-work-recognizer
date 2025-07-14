@@ -7,7 +7,7 @@ from PyQt5.QtGui import QFont, QIcon, QColor, QPalette, QImage, QPixmap, QPainte
 import qtawesome as qta
 import cv2
 
-# --- Color Palette (from reference image) ---
+# --- Color Palette ---
 BG_MAIN = "#181B20"         # Main background
 BG_SIDEBAR = "#20242A"     # Sidebar background
 BG_CARD = "#23262B"        # Card background
@@ -59,7 +59,6 @@ class ModernButton(QPushButton):
             }}
             QPushButton:focus {{
                 outline: none;
-                box-shadow: {BTN_FOCUS_SHADOW};
             }}
         ''')
     def focusInEvent(self, event):
@@ -194,33 +193,28 @@ class CameraFeeds(CardFrame):
         layout.addWidget(title)
         # Video feed container with grid layout for overlay
         self.video_container = QFrame()
-        self.video_container.setStyleSheet(f"""
-            background: #181B20;
-            border-radius: 18px;
-            border: none;
-        """)
+        self.video_container.setStyleSheet(f"background: #181B20; border-radius: 18px; border: none;")
         self.video_container.setMinimumSize(340, 220)
         video_grid = QGridLayout(self.video_container)
         video_grid.setContentsMargins(0, 0, 0, 0)
         video_grid.setSpacing(0)
-        # Video label with border and rounded corners
+        # Border frame with rounded corners and accent border
+        self.video_border = QFrame()
+        self.video_border.setStyleSheet(f"background: transparent; border: 2px solid {ACCENT}; border-radius: 18px;")
+        self.video_border.setMinimumSize(320, 200)
+        border_layout = QVBoxLayout(self.video_border)
+        border_layout.setContentsMargins(0, 0, 0, 0)
+        border_layout.setSpacing(0)
+        # Video label (no border, just rounded corners)
         self.video_label = QLabel()
         self.video_label.setAlignment(Qt.AlignCenter)
-        self.video_label.setStyleSheet(f"background: #111; border-radius: 18px; border: 2px solid {ACCENT};")
-        self.video_label.setMinimumSize(320, 200)
-        video_grid.addWidget(self.video_label, 0, 0, 2, 2, alignment=Qt.AlignCenter)
-        # LIVE badge (pill, clear text, no box-shadow/transition)
+        self.video_label.setStyleSheet(f"background: #111; border-radius: 18px;")
+        self.video_label.setMinimumSize(316, 196)
+        border_layout.addWidget(self.video_label)
+        video_grid.addWidget(self.video_border, 0, 0, 2, 2, alignment=Qt.AlignCenter)
+        # LIVE badge (unchanged)
         self.live_badge = QLabel("LIVE")
-        self.live_badge.setStyleSheet(f"""
-            background: {ACCENT};
-            color: #fff;
-            font-weight: bold;
-            font-size: 13px;
-            padding: 4px 18px;
-            border-radius: 14px;
-            margin-top: 18px;
-            margin-left: 18px;
-        """)
+        self.live_badge.setStyleSheet(f"background: {ACCENT}; color: #fff; font-weight: bold; font-size: 13px; padding: 4px 18px; border-radius: 14px; margin-top: 18px; margin-left: 18px;")
         self.live_badge.setFixedWidth(60)
         self.live_badge.setAlignment(Qt.AlignCenter)
         video_grid.addWidget(self.live_badge, 0, 0, alignment=Qt.AlignTop | Qt.AlignLeft)
