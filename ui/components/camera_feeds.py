@@ -54,7 +54,7 @@ class CameraFeeds(CardFrame):
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         """)
-        self.video_container.setMinimumSize(360, 240)
+        self.video_container.setMinimumSize(520, 360)
         video_grid = QGridLayout(self.video_container)
         video_grid.setContentsMargins(0, 0, 0, 0)
         video_grid.setSpacing(0)
@@ -64,7 +64,7 @@ class CameraFeeds(CardFrame):
             border: 2px solid {ACCENT};
             border-radius: 16px;
         """)
-        self.video_border.setMinimumSize(340, 220)
+        self.video_border.setMinimumSize(500, 340)
         border_layout = QVBoxLayout(self.video_border)
         border_layout.setContentsMargins(0, 0, 0, 0)
         border_layout.setSpacing(0)
@@ -76,7 +76,7 @@ class CameraFeeds(CardFrame):
             color: {TEXT_SUB};
             font-size: 14px;
         """)
-        self.video_label.setMinimumSize(336, 216)
+        self.video_label.setMinimumSize(496, 336)
         border_layout.addWidget(self.video_label)
         video_grid.addWidget(self.video_border, 0, 0, 2, 2, alignment=Qt.AlignCenter)
         layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
