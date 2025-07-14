@@ -195,8 +195,9 @@ class CameraFeeds(CardFrame):
         layout.addWidget(title)
         self.video_label = QLabel()
         self.video_label.setAlignment(Qt.AlignCenter)
-        self.video_label.setStyleSheet(f"background: #111; border-radius: 10px;")
-        self.video_label.setMinimumSize(320, 200)
+        self.video_label.setStyleSheet(f"background: #111; border-radius: 16px;")
+        self.video_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_label.setMinimumHeight(240)
         layout.addWidget(self.video_label, stretch=1)
         self.setLayout(layout)
         self.start_camera()
@@ -212,13 +213,19 @@ class CameraFeeds(CardFrame):
         if self.cap:
             ret, frame = self.cap.read()
             if ret:
+                # No mirroring (no cv2.flip)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 h, w, ch = frame.shape
-                bytes_per_line = ch * w
-                qt_image = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
+                # Calculate 16:9 size based on label width
+                label_w = self.video_label.width()
+                label_h = int(label_w * 9 / 16)
+                if label_h > self.video_label.height():
+                    label_h = self.video_label.height()
+                    label_w = int(label_h * 16 / 9)
+                frame = cv2.resize(frame, (label_w, label_h), interpolation=cv2.INTER_AREA)
+                qt_image = QImage(frame.data, label_w, label_h, ch * label_w, QImage.Format_RGB888)
                 pixmap = QPixmap.fromImage(qt_image)
-                self.video_label.setPixmap(pixmap.scaled(
-                    self.video_label.width(), self.video_label.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                self.video_label.setPixmap(pixmap)
             else:
                 self.video_label.setText("Error: Failed to capture frame.")
     def stop_camera(self):
