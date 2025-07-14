@@ -4,7 +4,7 @@
 
 ---
 
-> **A modern, modular Python application for recognizing and logging employee work activities using your laptop webcam.**
+> **A modern, modular computer vision system for recognizing and logging employee work activities in professional environments.**
 
 ---
 
@@ -22,17 +22,17 @@
 ---
 
 ## Overview
-Employee Work Time Recognizer leverages computer vision to automatically detect and log work, free, and idle times. Designed with a focus on modularity, clean code, and a modern user experience.
+Employee Work Time Recognizer is a scalable, production-ready solution designed for organizations to monitor, recognize, and log employee work activities using computer vision. The system is built for deployment in office environments, supporting multiple cameras and users, and is architected for easy integration and extension.
 
 ---
 
 ## Features
-- Minimal, modern PyQt5 GUI
-- Real-time webcam feed
-- Modular architecture for easy extension
+- Minimal, modern PyQt5 GUI for control and monitoring
+- Real-time video feed integration
+- Modular architecture for enterprise scalability
 - Activity recognition (work, sleep, eat, idle) *(in progress)*
-- Local time logging and reporting *(upcoming)*
-- Professional UX/UI principles
+- Local and/or centralized time logging and reporting *(upcoming)*
+- Professional UX/UI principles for business environments
 
 ---
 
@@ -48,7 +48,7 @@ The following images illustrate the type of environment and monitoring this syst
 
 ## User Interface
 
-*The actual application features a modern, minimal PyQt5 interface with a central webcam feed and clear controls. A real screenshot will be added here as development progresses.*
+*The application features a modern, minimal PyQt5 interface with a central video feed and clear controls. Designed for clarity and ease of use in professional settings. A real screenshot will be added here as development progresses.*
 
 ---
 
@@ -56,7 +56,7 @@ The following images illustrate the type of environment and monitoring this syst
 
 | Folder/File      | Purpose                                 |
 |------------------|-----------------------------------------|
-| `camera/`        | Webcam access and video capture         |
+| `camera/`        | Video capture and camera integration    |
 | `detection/`     | Activity recognition logic and models   |
 | `logging/`       | Time logging and storage                |
 | `reporting/`     | Report generation                       |
@@ -86,17 +86,17 @@ The following images illustrate the type of environment and monitoring this syst
 ---
 
 ## Usage
-- Launch the app to access the webcam and view the modern GUI.
-- Use the Start/Stop buttons to control the webcam feed.
-- Future updates will add activity detection, logging, and reporting.
+- Deploy the system in your office or organization to monitor employee work activities.
+- Use the GUI to control video feeds and review activity logs.
+- Future updates will add advanced activity detection, centralized logging, and reporting.
 
 ---
 
 ## Code Organization Principles
 - **Component-based:** Each feature is in its own directory.
-- **Modular:** Code is easy to extend and maintain.
+- **Modular:** Code is easy to extend and maintain for enterprise needs.
 - **Separation of concerns:** UI, detection, logging, and reporting are clearly separated.
-- **Professional UX/UI:** Clean, minimal, and user-focused design.
+- **Professional UX/UI:** Clean, minimal, and user-focused design for business environments.
 
 ---
 
