@@ -2,9 +2,10 @@ import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QSizePolicy, QGridLayout, QPushButton, QStackedWidget
 )
-from PyQt5.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
+from PyQt5.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QTimer
+from PyQt5.QtGui import QFont, QIcon, QColor, QPalette, QImage, QPixmap
 import qtawesome as qta
+import cv2
 
 # --- Color Palette (from reference image) ---
 BG_MAIN = "#181B20"         # Main background
@@ -184,19 +185,52 @@ class CardFrame(QFrame):
 class CameraFeeds(CardFrame):
     def __init__(self):
         super().__init__()
+        self.cap = None
+        self.timer = None
         layout = QVBoxLayout()
         layout.setContentsMargins(PADDING, PADDING, PADDING, PADDING)
         layout.setSpacing(GAP)
         title = QLabel("LIVE CAMERA FEEDS")
         title.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 14px; font-weight: bold;")
         layout.addWidget(title)
-        empty = QLabel("No data available")
-        empty.setStyleSheet(f"color: {TEXT_SUB}; font-size: 15px;")
-        empty.setAlignment(Qt.AlignCenter)
-        layout.addStretch()
-        layout.addWidget(empty)
-        layout.addStretch()
+        self.video_label = QLabel()
+        self.video_label.setAlignment(Qt.AlignCenter)
+        self.video_label.setStyleSheet(f"background: #111; border-radius: 10px;")
+        self.video_label.setMinimumSize(320, 200)
+        layout.addWidget(self.video_label, stretch=1)
         self.setLayout(layout)
+        self.start_camera()
+    def start_camera(self):
+        self.cap = cv2.VideoCapture(0)
+        if not self.cap.isOpened():
+            self.video_label.setText("Error: Could not open webcam.")
+            return
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_frame)
+        self.timer.start(30)
+    def update_frame(self):
+        if self.cap:
+            ret, frame = self.cap.read()
+            if ret:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                h, w, ch = frame.shape
+                bytes_per_line = ch * w
+                qt_image = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
+                pixmap = QPixmap.fromImage(qt_image)
+                self.video_label.setPixmap(pixmap.scaled(
+                    self.video_label.width(), self.video_label.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            else:
+                self.video_label.setText("Error: Failed to capture frame.")
+    def stop_camera(self):
+        if self.timer:
+            self.timer.stop()
+            self.timer = None
+        if self.cap:
+            self.cap.release()
+            self.cap = None
+    def closeEvent(self, event):
+        self.stop_camera()
+        event.accept()
 
 class ActivityDetection(CardFrame):
     def __init__(self):
