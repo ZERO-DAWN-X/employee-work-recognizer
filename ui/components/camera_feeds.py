@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel, QWidget, QSizePolicy
 from PyQt5.QtCore import Qt, QTimer, QTime
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPainterPath
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPainterPath, QFont
 import qtawesome as qta
 import cv2
 import numpy as np
@@ -16,6 +16,27 @@ STATUS_CONFIG = {
     'WALK':    {'color': '#F59E42', 'icon': 'fa5s.walking',  'label': 'Walking'},
     'OFFLINE': {'color': '#EF4444', 'icon': 'fa5s.times-circle', 'label': 'Offline'},
 }
+
+class StatusBadge(QWidget):
+    def __init__(self, icon_name, label, color, active=False, parent=None):
+        super().__init__(parent)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(10, 2, 10, 2)
+        layout.setSpacing(6)
+        icon = QLabel()
+        icon.setPixmap(qta.icon(icon_name, color=color if active else '#888').pixmap(16, 16))
+        icon.setAlignment(Qt.AlignVCenter)
+        text = QLabel(label)
+        text.setStyleSheet(f"color: #fff; font-weight: 600; font-size: 13px;" if active else "color: #bbb; font-weight: 500; font-size: 13px;")
+        layout.addWidget(icon)
+        layout.addWidget(text)
+        self.setLayout(layout)
+        self.setFixedHeight(28)
+        self.setStyleSheet(f"""
+            background: {color if active else '#23262B'};
+            border-radius: 14px;
+            border: 1.5px solid {color if active else '#23262B'};
+        """)
 
 class CameraFeeds(CardFrame):
     def __init__(self):
@@ -47,14 +68,15 @@ class CameraFeeds(CardFrame):
         self.clock_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         title_row.addWidget(self.clock_label)
         layout.addLayout(title_row)
-        # Video container
+        # Video container (increase size)
         self.video_container = QFrame()
         self.video_container.setStyleSheet(f"""
             background: #0A0E12;
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         """)
-        self.video_container.setMinimumSize(360, 240)
+        self.video_container.setMinimumSize(480, 320)
+        self.video_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         video_grid = QGridLayout(self.video_container)
         video_grid.setContentsMargins(0, 0, 0, 0)
         video_grid.setSpacing(0)
@@ -64,7 +86,8 @@ class CameraFeeds(CardFrame):
             border: 2px solid {ACCENT};
             border-radius: 16px;
         """)
-        self.video_border.setMinimumSize(340, 220)
+        self.video_border.setMinimumSize(460, 300)
+        self.video_border.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         border_layout = QVBoxLayout(self.video_border)
         border_layout.setContentsMargins(0, 0, 0, 0)
         border_layout.setSpacing(0)
@@ -76,27 +99,25 @@ class CameraFeeds(CardFrame):
             color: {TEXT_SUB};
             font-size: 14px;
         """)
-        self.video_label.setMinimumSize(336, 216)
+        self.video_label.setMinimumSize(456, 296)
+        self.video_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         border_layout.addWidget(self.video_label)
         video_grid.addWidget(self.video_border, 0, 0, 2, 2, alignment=Qt.AlignCenter)
         layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
-        # Status row (badges)
-        self.status_row = QHBoxLayout()
-        self.status_row.setSpacing(12)
-        self.status_row.setAlignment(Qt.AlignLeft)
-        self.status_badges = {}
-        for key, cfg in STATUS_CONFIG.items():
-            badge = QLabel()
-            badge.setText(f"  {cfg['label']}  ")
-            badge.setStyleSheet(self._badge_style(cfg['color'], active=False))
-            badge.setAlignment(Qt.AlignCenter)
-            badge.setMinimumHeight(28)
-            badge.setMinimumWidth(60)
-            badge.setPixmap(qta.icon(cfg['icon'], color=cfg['color']).pixmap(18, 18))
-            badge.setMargin(0)
-            self.status_row.addWidget(self._make_status_badge(cfg['icon'], cfg['label'], cfg['color'], active=False, key=key))
-            self.status_badges[key] = badge
-        layout.addLayout(self.status_row)
+        # Status row container (fix overflow)
+        self.status_row_frame = QFrame()
+        self.status_row_frame.setStyleSheet(f"""
+            background: #181B20;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.04);
+            margin-top: 12px;
+        """)
+        self.status_row_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        status_row_layout = QHBoxLayout(self.status_row_frame)
+        status_row_layout.setContentsMargins(16, 4, 16, 4)
+        status_row_layout.setSpacing(10)
+        self.status_row_layout = status_row_layout
+        layout.addWidget(self.status_row_frame)
         # Work/Idle time stats
         self.stats_label = QLabel()
         self.stats_label.setStyleSheet(f"color: {TEXT_SUB}; font-size: 14px; font-weight: 500; margin-top: 8px;")
@@ -108,35 +129,19 @@ class CameraFeeds(CardFrame):
         self.clock_timer.timeout.connect(self.update_clock)
         self.clock_timer.start(1000)
         self.update_clock()
-    def _make_status_badge(self, icon_name, label, color, active, key):
-        badge = QLabel()
-        icon = qta.icon(icon_name, color=color if active else '#444')
-        badge.setPixmap(icon.pixmap(18, 18))
-        badge.setText(f"  {label}  ")
-        badge.setStyleSheet(self._badge_style(color, active))
-        badge.setAlignment(Qt.AlignCenter)
-        badge.setMinimumHeight(28)
-        badge.setMinimumWidth(60)
-        badge.setMargin(0)
-        badge.setObjectName(f"status_{key}")
-        return badge
-    def _badge_style(self, color, active):
-        if active:
-            return f"background: {color}; color: #fff; font-weight: 600; border-radius: 14px; padding: 4px 16px; border: 1.5px solid {color};"
-        else:
-            return f"background: transparent; color: #444; font-weight: 500; border-radius: 14px; padding: 4px 16px; border: 1.5px solid #333; opacity: 0.5;"
     def update_status_row(self, status):
         # Remove old widgets
-        while self.status_row.count():
-            item = self.status_row.takeAt(0)
+        while self.status_row_layout.count():
+            item = self.status_row_layout.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
         # Add new badges
         for key, cfg in STATUS_CONFIG.items():
             active = (key == status)
-            badge = self._make_status_badge(cfg['icon'], cfg['label'], cfg['color'], active, key)
-            self.status_row.addWidget(badge)
+            badge = StatusBadge(cfg['icon'], cfg['label'], cfg['color'], active)
+            self.status_row_layout.addWidget(badge)
+        self.status_row_layout.addStretch()
     def update_clock(self):
         self.clock_label.setText(QTime.currentTime().toString('hh:mm:ss'))
     def start_camera(self):
