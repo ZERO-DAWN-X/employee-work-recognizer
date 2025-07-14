@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel, QWidget, QSizePolicy
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel
 from PyQt5.QtCore import Qt, QTimer, QTime
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPainterPath, QFont
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPainterPath, QPen
 import qtawesome as qta
 import cv2
 import numpy as np
@@ -9,47 +9,18 @@ from ui.style import PADDING, GAP, ACCENT, STATUS_ERROR, STATUS_SUCCESS, STATUS_
 from ui.components.card import CardFrame
 from detection.face_detector import FaceDetector
 
-STATUS_CONFIG = {
-    'WORK':    {'color': '#10B981', 'icon': 'fa5s.laptop',   'label': 'Work'},
-    'IDLE':    {'color': '#3B82F6', 'icon': 'fa5s.coffee',   'label': 'Idle'},
-    'SLEEP':   {'color': '#8B5CF6', 'icon': 'fa5s.bed',      'label': 'Sleeping'},
-    'WALK':    {'color': '#F59E42', 'icon': 'fa5s.walking',  'label': 'Walking'},
-    'OFFLINE': {'color': '#EF4444', 'icon': 'fa5s.times-circle', 'label': 'Offline'},
-}
-
-class StatusBadge(QWidget):
-    def __init__(self, icon_name, label, color, active=False, parent=None):
-        super().__init__(parent)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 2, 10, 2)
-        layout.setSpacing(6)
-        icon = QLabel()
-        icon.setPixmap(qta.icon(icon_name, color=color if active else '#888').pixmap(16, 16))
-        icon.setAlignment(Qt.AlignVCenter)
-        text = QLabel(label)
-        text.setStyleSheet(f"color: #fff; font-weight: 600; font-size: 13px;" if active else "color: #bbb; font-weight: 500; font-size: 13px;")
-        layout.addWidget(icon)
-        layout.addWidget(text)
-        self.setLayout(layout)
-        self.setFixedHeight(28)
-        self.setStyleSheet(f"""
-            background: {color if active else '#23262B'};
-            border-radius: 14px;
-            border: 1.5px solid {color if active else '#23262B'};
-        """)
-
 class CameraFeeds(CardFrame):
     def __init__(self):
         super().__init__()
         self.cap = None
         self.timer = None
         self.detector = FaceDetector()
-        self.status_buffer = deque(maxlen=10)
+        self.status_buffer = deque(maxlen=10)  # For smoothing
         self.current_status = None
         self.last_status = None
         self.status_changed_time = None
-        self.work_time = 0
-        self.idle_time = 0
+        self.work_time = 0  # seconds
+        self.idle_time = 0  # seconds
         self.last_update_time = None
         layout = QVBoxLayout()
         layout.setContentsMargins(PADDING, PADDING, PADDING, PADDING)
@@ -63,34 +34,35 @@ class CameraFeeds(CardFrame):
         title_row.addWidget(title_icon)
         title_row.addWidget(title)
         title_row.addStretch()
+        # Live clock
         self.clock_label = QLabel()
         self.clock_label.setStyleSheet(f"color: {TEXT_SUB}; font-size: 15px; font-weight: 500;")
         self.clock_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         title_row.addWidget(self.clock_label)
         layout.addLayout(title_row)
-        # Video container (increase size)
+        # Video container
         self.video_container = QFrame()
         self.video_container.setStyleSheet(f"""
             background: #0A0E12;
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         """)
-        self.video_container.setMinimumSize(480, 320)
-        self.video_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_container.setMinimumSize(360, 240)
         video_grid = QGridLayout(self.video_container)
         video_grid.setContentsMargins(0, 0, 0, 0)
         video_grid.setSpacing(0)
+        # Video border
         self.video_border = QFrame()
         self.video_border.setStyleSheet(f"""
             background: transparent;
             border: 2px solid {ACCENT};
             border-radius: 16px;
         """)
-        self.video_border.setMinimumSize(460, 300)
-        self.video_border.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_border.setMinimumSize(340, 220)
         border_layout = QVBoxLayout(self.video_border)
         border_layout.setContentsMargins(0, 0, 0, 0)
         border_layout.setSpacing(0)
+        # Video label
         self.video_label = QLabel()
         self.video_label.setAlignment(Qt.AlignCenter)
         self.video_label.setStyleSheet(f"""
@@ -99,25 +71,25 @@ class CameraFeeds(CardFrame):
             color: {TEXT_SUB};
             font-size: 14px;
         """)
-        self.video_label.setMinimumSize(456, 296)
-        self.video_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_label.setMinimumSize(336, 216)
         border_layout.addWidget(self.video_label)
         video_grid.addWidget(self.video_border, 0, 0, 2, 2, alignment=Qt.AlignCenter)
-        layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
-        # Status row container (fix overflow)
-        self.status_row_frame = QFrame()
-        self.status_row_frame.setStyleSheet(f"""
-            background: #181B20;
+        # Status badge
+        self.status_badge = QLabel("● OFFLINE")
+        self.status_badge.setStyleSheet(f"""
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 {STATUS_ERROR}, stop:1 #DC2626);
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 8px 16px;
             border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.04);
-            margin-top: 12px;
+            margin: 16px;
         """)
-        self.status_row_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        status_row_layout = QHBoxLayout(self.status_row_frame)
-        status_row_layout.setContentsMargins(16, 4, 16, 4)
-        status_row_layout.setSpacing(10)
-        self.status_row_layout = status_row_layout
-        layout.addWidget(self.status_row_frame)
+        self.status_badge.setFixedHeight(32)
+        self.status_badge.setAlignment(Qt.AlignCenter)
+        video_grid.addWidget(self.status_badge, 0, 0, alignment=Qt.AlignTop | Qt.AlignLeft)
+        layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
         # Work/Idle time stats
         self.stats_label = QLabel()
         self.stats_label.setStyleSheet(f"color: {TEXT_SUB}; font-size: 14px; font-weight: 500; margin-top: 8px;")
@@ -125,31 +97,40 @@ class CameraFeeds(CardFrame):
         layout.addWidget(self.stats_label)
         self.setLayout(layout)
         self.start_camera()
+        # Start clock timer
         self.clock_timer = QTimer(self)
         self.clock_timer.timeout.connect(self.update_clock)
         self.clock_timer.start(1000)
         self.update_clock()
-    def update_status_row(self, status):
-        # Remove old widgets
-        while self.status_row_layout.count():
-            item = self.status_row_layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
-        # Add new badges
-        for key, cfg in STATUS_CONFIG.items():
-            active = (key == status)
-            badge = StatusBadge(cfg['icon'], cfg['label'], cfg['color'], active)
-            self.status_row_layout.addWidget(badge)
-        self.status_row_layout.addStretch()
     def update_clock(self):
         self.clock_label.setText(QTime.currentTime().toString('hh:mm:ss'))
     def start_camera(self):
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             self.video_label.setText("Camera not available")
-            self.update_status_row('OFFLINE')
+            self.status_badge.setText("● OFFLINE")
+            self.status_badge.setStyleSheet(f"""
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 {STATUS_ERROR}, stop:1 #DC2626);
+                color: white;
+                font-weight: 600;
+                font-size: 12px;
+                padding: 8px 16px;
+                border-radius: 16px;
+                margin: 16px;
+            """)
             return
+        self.status_badge.setText("● WORK")
+        self.status_badge.setStyleSheet(f"""
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 {STATUS_SUCCESS}, stop:1 #059669);
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 8px 16px;
+            border-radius: 16px;
+            margin: 16px;
+        """)
         self.last_update_time = QTime.currentTime()
         self.status_buffer.clear()
         self.current_status = 'WORK'
@@ -160,13 +141,14 @@ class CameraFeeds(CardFrame):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(30)
-        self.update_status_row('WORK')
     def update_frame(self):
         if self.cap:
             ret, frame = self.cap.read()
             if ret:
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                # Detection
                 face_present, faces = self.detector.detect(frame_rgb)
+                # Smoothing
                 self.status_buffer.append('WORK' if face_present else 'IDLE')
                 if self.status_buffer.count('WORK') >= 7:
                     smoothed_status = 'WORK'
@@ -174,6 +156,7 @@ class CameraFeeds(CardFrame):
                     smoothed_status = 'IDLE'
                 else:
                     smoothed_status = self.current_status or 'IDLE'
+                # Time tracking
                 now = QTime.currentTime()
                 if self.last_update_time:
                     elapsed = self.last_update_time.msecsTo(now) / 1000.0
@@ -182,10 +165,35 @@ class CameraFeeds(CardFrame):
                     elif self.current_status == 'IDLE':
                         self.idle_time += elapsed
                 self.last_update_time = now
+                # Only update status if changed
                 if smoothed_status != self.current_status:
                     self.current_status = smoothed_status
                     self.status_changed_time = now
-                    self.update_status_row(self.current_status)
+                # Update badge
+                if self.current_status == 'WORK':
+                    self.status_badge.setText("● WORK")
+                    self.status_badge.setStyleSheet(f"""
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 {STATUS_SUCCESS}, stop:1 #059669);
+                        color: white;
+                        font-weight: 600;
+                        font-size: 12px;
+                        padding: 8px 16px;
+                        border-radius: 16px;
+                        margin: 16px;
+                    """)
+                else:
+                    self.status_badge.setText("● IDLE")
+                    self.status_badge.setStyleSheet(f"""
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 {STATUS_INFO}, stop:1 #2563EB);
+                        color: white;
+                        font-weight: 600;
+                        font-size: 12px;
+                        padding: 8px 16px;
+                        border-radius: 16px;
+                        margin: 16px;
+                    """)
                 # Draw face rectangles
                 draw_frame = frame_rgb.copy()
                 for (x, y, w, h) in faces:
@@ -194,6 +202,7 @@ class CameraFeeds(CardFrame):
                 bytes_per_line = ch * w
                 qt_image = QImage(draw_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
                 pixmap = QPixmap.fromImage(qt_image)
+                # Enhanced rounded corners
                 radius = 14
                 rounded = QPixmap(pixmap.size())
                 rounded.fill(Qt.transparent)
@@ -208,6 +217,7 @@ class CameraFeeds(CardFrame):
                 self.video_label.setPixmap(rounded.scaled(
                     self.video_label.width(), self.video_label.height(), 
                     Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                # Update stats label
                 self.stats_label.setText(f"Work: {int(self.work_time)}s   |   Idle: {int(self.idle_time)}s")
             else:
                 self.video_label.setText("Stream error")
