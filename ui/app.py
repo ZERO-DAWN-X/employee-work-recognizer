@@ -2,8 +2,8 @@ import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QSizePolicy, QGridLayout, QPushButton
 )
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve
+from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
 import qtawesome as qta
 
 # --- Color Palette (from reference image) ---
@@ -24,6 +24,47 @@ CARD_RADIUS = 18
 GAP = 24
 ICON_SIZE = 28
 TOPBAR_HEIGHT = 48
+
+BTN_RADIUS = 8
+BTN_SIZE = 32
+BTN_BG_HOVER = "rgba(61, 225, 201, 0.10)"  # Accent, faded
+BTN_BG_PRESSED = "rgba(61, 225, 201, 0.18)"  # Accent, more visible
+BTN_FOCUS_SHADOW = "0 0 0 3px rgba(61,225,201,0.25)"
+
+class ModernButton(QPushButton):
+    def __init__(self, icon, tooltip, accent_color=None, parent=None):
+        super().__init__(parent)
+        self.setIcon(icon)
+        self.setFixedSize(BTN_SIZE, BTN_SIZE)
+        self.setToolTip(tooltip)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self._accent = accent_color or ACCENT
+        self.setStyleSheet(f'''
+            QPushButton {{
+                background: transparent;
+                border: none;
+                border-radius: {BTN_RADIUS}px;
+                margin-left: 4px;
+                transition: background 0.2s;
+            }}
+            QPushButton:hover {{
+                background: {BTN_BG_HOVER};
+            }}
+            QPushButton:pressed {{
+                background: {BTN_BG_PRESSED};
+            }}
+            QPushButton:focus {{
+                outline: none;
+                box-shadow: {BTN_FOCUS_SHADOW};
+            }}
+        ''')
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        self.update()
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        self.update()
 
 class Sidebar(QFrame):
     def __init__(self):
@@ -63,20 +104,13 @@ class CustomTopBar(QFrame):
         layout.addWidget(self.title)
         layout.addStretch()
         layout.addWidget(self.company)
-        # Window controls
-        self.min_btn = QPushButton()
-        self.max_btn = QPushButton()
-        self.close_btn = QPushButton()
-        for btn, icon, tooltip in [
-            (self.min_btn, qta.icon('fa5s.window-minimize', color=TEXT_SUB), 'Minimize'),
-            (self.max_btn, qta.icon('fa5s.square', color=TEXT_SUB), 'Maximize/Restore'),
-            (self.close_btn, qta.icon('fa5s.times', color='#F55'), 'Close')
-        ]:
-            btn.setIcon(icon)
-            btn.setFixedSize(32, 32)
-            btn.setStyleSheet(f"background: transparent; border: none; margin-left: 4px;")
-            btn.setToolTip(tooltip)
-            layout.addWidget(btn)
+        # Window controls with modern effects
+        self.min_btn = ModernButton(qta.icon('fa5s.window-minimize', color=TEXT_SUB), 'Minimize')
+        self.max_btn = ModernButton(qta.icon('fa5s.square', color=TEXT_SUB), 'Maximize/Restore')
+        self.close_btn = ModernButton(qta.icon('fa5s.times', color='#F55'), 'Close', accent_color='#F55')
+        layout.addWidget(self.min_btn)
+        layout.addWidget(self.max_btn)
+        layout.addWidget(self.close_btn)
         self.setLayout(layout)
         # Connect signals
         self.min_btn.clicked.connect(self._minimize)
@@ -186,14 +220,20 @@ class Dashboard(QWidget):
     def __init__(self):
         super().__init__()
         self.setStyleSheet(f"background: {BG_MAIN}; font-family: 'Segoe UI', Arial, sans-serif;")
-        main_layout = QHBoxLayout(self)
+        # Outer vertical layout: top bar, then main content
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+        # Top bar placeholder (will be set by MainWindow)
+        self.topbar = None
+        # Main content area: sidebar + dashboard
+        main_layout = QHBoxLayout()
         main_layout.setContentsMargins(GAP, GAP, GAP, GAP)
         main_layout.setSpacing(GAP)
         self.sidebar = Sidebar()
         main_layout.addWidget(self.sidebar)
         content = QVBoxLayout()
         content.setSpacing(GAP)
-        self.topbar = None  # Will be set by MainWindow
         grid = QGridLayout()
         grid.setSpacing(GAP)
         self.cameras = CameraFeeds()
@@ -206,6 +246,10 @@ class Dashboard(QWidget):
         grid.addWidget(self.timeline, 2, 0, 1, 3)
         content.addLayout(grid)
         main_layout.addLayout(content)
+        # Add layouts to outer layout
+        outer_layout.addSpacing(0)
+        # Top bar will be inserted at index 0 by MainWindow
+        outer_layout.addLayout(main_layout)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -215,7 +259,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.central = Dashboard()
         self.setCentralWidget(self.central)
-        # Add custom top bar
+        # Add custom top bar as true header
         self.topbar = CustomTopBar(self)
         self.central.topbar = self.topbar
         layout = self.central.layout() or self.central.children()[0]

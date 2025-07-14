@@ -1,4 +1,4 @@
-# Employee Work Time Recognizer
+# Enterprise Workforce Analytics Platform
 
 ![Hero Image](public/hero.jpg)
 
