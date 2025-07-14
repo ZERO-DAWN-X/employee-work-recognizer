@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QPushButton, QGraphicsDropShadowEffect, QLabel
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QPushButton, QGraphicsDropShadowEffect
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 import qtawesome as qta
@@ -77,7 +77,6 @@ class Sidebar(QFrame):
         layout.addWidget(brand_label)
         
         self.buttons = []
-        # Use fa5s prefix and FontAwesome 5 solid icon names
         icons = [
             (qta.icon('fa5s.tachometer-alt', color=TEXT_MAIN), 'Dashboard'),
             (qta.icon('fa5s.users', color=TEXT_MAIN), 'Users'),
@@ -97,4 +96,6 @@ class Sidebar(QFrame):
     
     def set_active(self, idx):
         for i, btn in enumerate(self.buttons):
-            btn.setChecked(i == idx) 
+            btn.setChecked(i == idx)
+
+from PyQt5.QtWidgets import QLabel  # Needed for brand_label 
