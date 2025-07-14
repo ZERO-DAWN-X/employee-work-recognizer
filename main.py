@@ -1,6 +1,6 @@
-from camera.webcam import show_webcam_feed
+from ui.app import run_gui
 
 if __name__ == "__main__":
-    print("Starting Employee Work Time Recognizer...")
-    show_webcam_feed()
+    print("Starting Employee Work Time Recognizer GUI...")
+    run_gui()
     # Future: Integrate detection, logging, and reporting modules here 
