@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel, QSizePolicy
 from PyQt5.QtCore import Qt, QTimer, QTime
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPainterPath
 import qtawesome as qta
@@ -54,7 +54,7 @@ class CameraFeeds(CardFrame):
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         """)
-        self.video_container.setMinimumSize(360, 240)
+        self.video_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         video_grid = QGridLayout(self.video_container)
         video_grid.setContentsMargins(0, 0, 0, 0)
         video_grid.setSpacing(0)
@@ -64,7 +64,7 @@ class CameraFeeds(CardFrame):
             border: 2px solid {ACCENT};
             border-radius: 16px;
         """)
-        self.video_border.setMinimumSize(340, 220)
+        self.video_border.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         border_layout = QVBoxLayout(self.video_border)
         border_layout.setContentsMargins(0, 0, 0, 0)
         border_layout.setSpacing(0)
@@ -76,10 +76,11 @@ class CameraFeeds(CardFrame):
             color: {TEXT_SUB};
             font-size: 14px;
         """)
-        self.video_label.setMinimumSize(336, 216)
+        self.video_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         border_layout.addWidget(self.video_label)
-        video_grid.addWidget(self.video_border, 0, 0, 2, 2, alignment=Qt.AlignCenter)
-        layout.addWidget(self.video_container, stretch=1, alignment=Qt.AlignCenter)
+        self.video_border.setLayout(border_layout)
+        video_grid.addWidget(self.video_border, 0, 0, 2, 2)
+        layout.addWidget(self.video_container, stretch=1)
         # Status row (badges)
         self.status_row = QHBoxLayout()
         self.status_row.setSpacing(12)
@@ -126,13 +127,11 @@ class CameraFeeds(CardFrame):
         else:
             return f"background: transparent; color: #444; font-weight: 500; border-radius: 14px; padding: 4px 16px; border: 1.5px solid #333; opacity: 0.5;"
     def update_status_row(self, status):
-        # Remove old widgets
         while self.status_row.count():
             item = self.status_row.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
-        # Add new badges
         for key, cfg in STATUS_CONFIG.items():
             active = (key == status)
             badge = self._make_status_badge(cfg['icon'], cfg['label'], cfg['color'], active, key)
@@ -198,11 +197,11 @@ class CameraFeeds(CardFrame):
                 path = QPainterPath()
                 path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), radius, radius)
                 painter.setClipPath(path)
-                painter.drawPixmap(0, 0, pixmap)
+                # Fill the label area
+                scaled = rounded.scaled(self.video_label.width(), self.video_label.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                painter.drawPixmap(0, 0, scaled)
                 painter.end()
-                self.video_label.setPixmap(rounded.scaled(
-                    self.video_label.width(), self.video_label.height(), 
-                    Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                self.video_label.setPixmap(scaled)
                 self.stats_label.setText(f"Work: {int(self.work_time)}s   |   Idle: {int(self.idle_time)}s")
             else:
                 self.video_label.setText("Stream error")
