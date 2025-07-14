@@ -4,7 +4,7 @@
 
 ---
 
-> **A modern, modular computer vision system for recognizing and logging employee work activities in professional environments.**
+> **A modern, modular computer vision and employee management system for recognizing, logging, and managing employee work activities in professional environments.**
 
 ---
 
@@ -22,7 +22,7 @@
 ---
 
 ## Overview
-Employee Work Time Recognizer is a scalable, production-ready solution designed for organizations to monitor, recognize, and log employee work activities using computer vision. The system is built for deployment in office environments, supporting multiple cameras and users, and is architected for easy integration and extension.
+Employee Work Time Recognizer is a scalable, production-ready solution designed for organizations to monitor, recognize, log, and manage employee work activities using computer vision and advanced analytics. The system is built for deployment in office environments, supporting multiple cameras and users, and is architected for easy integration and extension. In addition to activity analysis, it provides comprehensive employee management features for modern workplaces.
 
 ---
 
@@ -30,6 +30,11 @@ Employee Work Time Recognizer is a scalable, production-ready solution designed 
 - Minimal, modern PyQt5 GUI for control and monitoring
 - Real-time video feed integration
 - Modular architecture for enterprise scalability
+- **Employee management dashboard**
+- **Attendance tracking and automated check-in/check-out**
+- **Shift scheduling and management**
+- **Performance analytics and productivity reports**
+- **Integration with HR and payroll systems**
 - Activity recognition (work, sleep, eat, idle) *(in progress)*
 - Local and/or centralized time logging and reporting *(upcoming)*
 - Professional UX/UI principles for business environments
@@ -48,7 +53,7 @@ The following images illustrate the type of environment and monitoring this syst
 
 ## User Interface
 
-*The application features a modern, minimal PyQt5 interface with a central video feed and clear controls. Designed for clarity and ease of use in professional settings. A real screenshot will be added here as development progresses.*
+*The application features a modern, minimal PyQt5 interface with a central video feed, employee management dashboard, and clear controls. Designed for clarity and ease of use in professional settings. A real screenshot will be added here as development progresses.*
 
 ---
 
@@ -86,8 +91,9 @@ The following images illustrate the type of environment and monitoring this syst
 ---
 
 ## Usage
-- Deploy the system in your office or organization to monitor employee work activities.
-- Use the GUI to control video feeds and review activity logs.
+- Deploy the system in your office or organization to monitor and manage employee work activities.
+- Use the GUI to control video feeds, manage employee profiles, track attendance, schedule shifts, and review activity logs and performance analytics.
+- Integrate with HR and payroll systems for seamless workforce management.
 - Future updates will add advanced activity detection, centralized logging, and reporting.
 
 ---
@@ -95,7 +101,7 @@ The following images illustrate the type of environment and monitoring this syst
 ## Code Organization Principles
 - **Component-based:** Each feature is in its own directory.
 - **Modular:** Code is easy to extend and maintain for enterprise needs.
-- **Separation of concerns:** UI, detection, logging, and reporting are clearly separated.
+- **Separation of concerns:** UI, detection, logging, reporting, and management are clearly separated.
 - **Professional UX/UI:** Clean, minimal, and user-focused design for business environments.
 
 ---
