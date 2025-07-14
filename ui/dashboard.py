@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QStackedWidget
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from ui.style import BG_MAIN, GAP
-from ui.components.sidebar import Sidebar
-from ui.components.screens import DashboardScreen, UsersScreen, AnalyticsScreen, SettingsScreen
+from ui.components.camera_feeds import CameraFeeds
+from ui.components.activity_status_list import ActivityStatusList
 
 class Dashboard(QWidget):
     def __init__(self):
@@ -12,32 +12,16 @@ class Dashboard(QWidget):
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }}
         ''')
-        # Outer vertical layout: top bar, then main content
-        outer_layout = QVBoxLayout(self)
-        outer_layout.setContentsMargins(0, 0, 0, 0)
-        outer_layout.setSpacing(0)
-        self.topbar = None
-        # Main content area: sidebar + stacked content
-        main_layout = QHBoxLayout()
+        main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(GAP, GAP, GAP, GAP)
         main_layout.setSpacing(GAP)
-        # Enhanced sidebar with navigation
-        self.stacked = QStackedWidget()
-        self.sidebar = Sidebar(self.on_nav)
-        main_layout.addWidget(self.sidebar)
-        # Add screens to stacked widget
-        self.screens = [
-            DashboardScreen(),
-            UsersScreen(),
-            AnalyticsScreen(),
-            SettingsScreen()
-        ]
-        for screen in self.screens:
-            self.stacked.addWidget(screen)
-        main_layout.addWidget(self.stacked)
-        # Add layouts to outer layout
-        outer_layout.addSpacing(0)
-        outer_layout.addLayout(main_layout)
-    def on_nav(self, idx):
-        self.sidebar.set_active(idx)
-        self.stacked.setCurrentIndex(idx) 
+        # Left: CameraFeeds
+        self.cameras = CameraFeeds()
+        main_layout.addWidget(self.cameras, stretch=2)
+        # Right: ActivityStatusList
+        self.status_list = ActivityStatusList()
+        main_layout.addWidget(self.status_list, stretch=1)
+        # Connect CameraFeeds to update status list
+        self.cameras.status_update_callback = self.update_status_list
+    def update_status_list(self, status_times, current_status):
+        self.status_list.update_status(status_times, current_status)

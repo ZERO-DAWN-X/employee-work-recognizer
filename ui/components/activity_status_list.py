@@ -4,10 +4,10 @@ import qtawesome as qta
 from ui.style import ACCENT, STATUS_SUCCESS, STATUS_INFO, STATUS_WARNING, STATUS_ERROR, TEXT_MAIN, TEXT_SUB
 
 STATUS_CONFIG = {
-    'WORK':    {'icon': qta.icon('fa5s.laptop', color=STATUS_SUCCESS), 'color': STATUS_SUCCESS, 'label': 'Work'},
-    'IDLE':    {'icon': qta.icon('fa5s.coffee', color=STATUS_INFO),    'color': STATUS_INFO,    'label': 'Idle'},
-    'SLEEP':   {'icon': qta.icon('fa5s.bed', color=STATUS_WARNING),    'color': STATUS_WARNING,  'label': 'Sleeping'},
-    'WALK':    {'icon': qta.icon('fa5s.walking', color=ACCENT),        'color': ACCENT,         'label': 'Walking'},
+    'WORK':    {'icon': qta.icon('fa.laptop', color=STATUS_SUCCESS), 'color': STATUS_SUCCESS, 'label': 'Work'},
+    'IDLE':    {'icon': qta.icon('fa.coffee', color=STATUS_INFO),    'color': STATUS_INFO,    'label': 'Idle'},
+    'SLEEP':   {'icon': qta.icon('fa.bed', color=STATUS_WARNING),    'color': STATUS_WARNING,  'label': 'Sleeping'},
+    'WALK':    {'icon': qta.icon('fa.male', color=ACCENT),           'color': ACCENT,         'label': 'Walking'},
 }
 
 class ActivityStatusList(QWidget):
