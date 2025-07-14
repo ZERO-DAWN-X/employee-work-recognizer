@@ -11,6 +11,7 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
+- [System Concept](#system-concept)
 - [User Interface](#user-interface)
 - [Project Structure](#project-structure)
 - [Setup & Installation](#setup--installation)
@@ -35,11 +36,19 @@ Employee Work Time Recognizer leverages computer vision to automatically detect 
 
 ---
 
+## System Concept
+
+The following images illustrate the type of environment and monitoring this system is designed for. These are not actual user interfaces, but conceptual images to help understand the system's purpose.
+
+| ![Office Monitoring](public/Office%20Monitoring.png) | ![Surveillance 1](public/Office%20Surveillance-1.png) |
+|:---------------------------------------------------:|:-----------------------------------------------------:|
+| ![Surveillance 2](public/Office%20Surveillance-2.png) | ![Surveillance](public/Office%20Surveillance.png)      |
+
+---
+
 ## User Interface
 
-![UI Dashboard](public/Office%20Surveillance-2.png)
-
-*Above: Example of a modern, minimal office monitoring dashboard. The actual application features a clean interface with clear controls and a central webcam feed, designed for clarity and ease of use.*
+*The actual application features a modern, minimal PyQt5 interface with a central webcam feed and clear controls. A real screenshot will be added here as development progresses.*
 
 ---
 
