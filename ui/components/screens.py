@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QLabel
 from PyQt5.QtCore import Qt
 from ui.style import GAP, ACCENT, TEXT_MAIN, TEXT_SUB
-from ui.components.camera_feeds import CameraFeeds
+from ui.components.employee_card import EmployeeCard
 from ui.components.activity import ActivityDetection
 from ui.components.analytics import AnalyticsCard
 from ui.components.timeline import TimelineCard
@@ -14,14 +14,28 @@ class DashboardScreen(QWidget):
         layout.setSpacing(0)
         grid = QGridLayout()
         grid.setSpacing(GAP)
-        self.cameras = CameraFeeds()
-        grid.addWidget(self.cameras, 0, 0, 2, 2)
+        # Left: Employee cards (vertical)
+        self.employee_cards = []
+        employees = [
+            {"name": "Alice Smith", "status": "WORK"},
+            {"name": "Bob Lee", "status": "IDLE"},
+        ]
+        left_col = QVBoxLayout()
+        left_col.setSpacing(GAP)
+        for emp in employees:
+            card = EmployeeCard(employee_name=emp["name"], current_status=emp["status"])
+            self.employee_cards.append(card)
+            left_col.addWidget(card)
+        left_col.addStretch()
+        grid.addLayout(left_col, 0, 0, 2, 1)
+        # Right: Activity, Analytics
         self.activity = ActivityDetection()
-        grid.addWidget(self.activity, 0, 2, 1, 1)
+        grid.addWidget(self.activity, 0, 1, 1, 1)
         self.analytics = AnalyticsCard()
-        grid.addWidget(self.analytics, 1, 2, 1, 1)
+        grid.addWidget(self.analytics, 1, 1, 1, 1)
+        # Bottom: Timeline
         self.timeline = TimelineCard()
-        grid.addWidget(self.timeline, 2, 0, 1, 3)
+        grid.addWidget(self.timeline, 2, 0, 1, 2)
         layout.addLayout(grid)
 
 class UsersScreen(QWidget):
