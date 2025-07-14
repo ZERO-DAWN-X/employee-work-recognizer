@@ -1,2 +1,2 @@
 opencv-python
-Pillow 
+PyQt5 
